@@ -1,0 +1,35 @@
+name: Update Submodule Reference
+
+on:
+  repository_dispatch:
+    types:
+      - update-submodule  # Matches the event-type from the ui-repo workflow
+
+jobs:
+  update-submodule:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout platform repository with submodules
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}  # Use the GITHUB_TOKEN for authentication
+        submodules: 'true'  # Fetch submodule content as well
+
+    - name: Set up Git identity
+      env:
+        USER_NAME: ${{ secrets.USER_NAME }}
+        USER_EMAIL: ${{ secrets.USER_EMAIL }}
+      run: |
+        git config --global user.name "$USER_NAME"
+        git config --global user.email "$USER_EMAIL"
+
+    - name: Update the submodule to the latest commit
+      run: |
+        echo "Updating submodule..."
+        git submodule update --init --recursive --remote # Fetch the latest submodule changes
+        git add ui-repository  # Stage the updated submodule reference
+        git commit -m "Update submodule to latest commit in ui-repository"
+        git push
+    - name: Notify success
+      run: echo "Submodule updated successfully!"
